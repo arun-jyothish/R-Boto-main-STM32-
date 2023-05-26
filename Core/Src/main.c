@@ -65,7 +65,7 @@ GPIO_PinState  state = GPIO_PIN_RESET;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
+/* USER CODE BEGIN 4 */
 
 void run(){
 
@@ -82,14 +82,12 @@ void run(){
 	  htim4.Instance->CCR4 = 100;
 	  HAL_Delay(1500);
 */
-    /* USER CODE END WHILE */
 		HAL_GPIO_TogglePin(status_led_GPIO_Port, status_led_Pin );
 		HAL_Delay(800);
 
-    /* USER CODE BEGIN 3 */
 
 }
-/* USER CODE END 0 */
+/* USER CODE END 4 */
 
 /**
   * @brief  The application entry point.
@@ -495,7 +493,7 @@ static void MX_GPIO_Init(void)
 
 }
 
-/* USER CODE BEGIN 4 */
+/* USER CODE BEGIN 5 */
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
@@ -504,7 +502,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	else 
 	state = 0;
 }
-/* USER CODE END 4 */
+/* USER CODE END 5 */
 
 /**
   * @brief  This function is executed in case of error occurrence.
