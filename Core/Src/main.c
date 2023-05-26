@@ -142,6 +142,7 @@ int main(void)
 	  else if ( state == 2){
 		  HAL_GPIO_TogglePin ( status_led_GPIO_Port, status_led_Pin );
 		  HAL_Delay(400);
+
 	  }
 	  else if ( state == 3){
 		  run();
