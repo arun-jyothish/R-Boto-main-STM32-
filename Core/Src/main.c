@@ -148,7 +148,16 @@ int main(void)
 		break;
 	  }
 	}
-		HAL_UART_Transmit( &huart1 , state , sizeof(state), 10 );
+	
+	char uart_buf[20];
+	int num = 10 ;
+
+	sprintf(uart_buf,"%d", num );
+	/* strcpy(uart_buf,"hello"); */
+
+		HAL_UART_Transmit( &huart1 , uart_buf , strlen( uart_buf ), 10 );
+		uint8_t end[] =   ".\r\n" ;
+		HAL_UART_Transmit( &huart1 ,end , sizeof(end), 10 );
 		HAL_Delay(1000);
 
     /* USER CODE END WHILE */
