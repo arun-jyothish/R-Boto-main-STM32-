@@ -44,6 +44,7 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
+UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -58,36 +59,27 @@ static void MX_TIM4_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
-GPIO_PinState  state = GPIO_PIN_RESET;
+uint8_t state = 0;
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 4 */
+/* USER CODE BEGIN 0 */
 
-void run(){
-
-/*
-	  htim2.Instance->CCR1 = 222;
-	  HAL_Delay(1500);
-	  htim2.Instance->CCR1 = 32;
-
-	  htim4.Instance->CCR3 = 222;
-	  htim4.Instance->CCR4 = 32;
-	  HAL_Delay(1500);
-
-	  htim4.Instance->CCR3 = 55;
-	  htim4.Instance->CCR4 = 100;
-	  HAL_Delay(1500);
-*/
-		HAL_GPIO_TogglePin(status_led_GPIO_Port, status_led_Pin );
-		HAL_Delay(800);
-
-
+void HAL_EXTI_GPIO_Callback (uint16_t GPIO_pin){
+	if ( GPIO_pin == B1_INT_Pin )
+	{
+		if ( state < 3 )
+		state ++;
+		else
+			state = 0;
+	}
 }
-/* USER CODE END 4 */
+
+/* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
@@ -122,29 +114,48 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  uint8_t msg1[] = " hello from stm32 \r\n";
+  uint8_t msg2[] = " hey jyothu\r\n";
   while (1)
   {
-    /* USER CODE END WHILE */
-	  if ( state == 0){
-		  HAL_GPIO_WritePin( status_led_GPIO_Port, status_led_Pin , GPIO_PIN_RESET );
-	  }
-	  else if ( state == 1){
-		  HAL_GPIO_WritePin( status_led_GPIO_Port, status_led_Pin , GPIO_PIN_SET );
-	  }
-	  else if ( state == 2){
-		  HAL_GPIO_TogglePin ( status_led_GPIO_Port, status_led_Pin );
-		  HAL_Delay(400);
+	switch ( state ){
+
+		case 0:{
+		HAL_GPIO_WritePin ( status_led_GPIO_Port, status_led_Pin , GPIO_PIN_SET );
+		break;
 
 	  }
-	  else if ( state == 3){
-		  run();
+		case 1:{
+		HAL_GPIO_WritePin ( status_led_GPIO_Port, status_led_Pin , GPIO_PIN_RESET );
+		break;
+
 	  }
+		case 2:{
+		HAL_GPIO_TogglePin( status_led_GPIO_Port, status_led_Pin  );
+		HAL_UART_Transmit( &huart1 , msg1 , sizeof(msg1), 10 );
+		HAL_Delay(400);
+		break;
+	  }
+		case 3:{
+		HAL_GPIO_TogglePin( status_led_GPIO_Port, status_led_Pin  );
+		HAL_UART_Transmit( &huart1 , msg2 , sizeof(msg2), 10 );
+		HAL_Delay(1000);
+		break;
+	  }
+	}
+		HAL_UART_Transmit( &huart1 , state , sizeof(state), 10 );
+		HAL_Delay(1000);
+
+    /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -424,6 +435,39 @@ static void MX_TIM4_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -493,16 +537,28 @@ static void MX_GPIO_Init(void)
 
 }
 
-/* USER CODE BEGIN 5 */
+/* USER CODE BEGIN 4 */
+void run(){
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	if ( state <3  )
-	state += 1;
-	else 
-	state = 0;
+/*
+	  htim2.Instance->CCR1 = 222;
+	  HAL_Delay(1500);
+	  htim2.Instance->CCR1 = 32;
+
+	  htim4.Instance->CCR3 = 222;
+	  htim4.Instance->CCR4 = 32;
+	  HAL_Delay(1500);
+
+	  htim4.Instance->CCR3 = 55;
+	  htim4.Instance->CCR4 = 100;
+	  HAL_Delay(1500);
+*/
+		HAL_GPIO_TogglePin(status_led_GPIO_Port, status_led_Pin );
+		HAL_Delay(800);
+
+
 }
-/* USER CODE END 5 */
+/* USER CODE END 4 */
 
 /**
   * @brief  This function is executed in case of error occurrence.
