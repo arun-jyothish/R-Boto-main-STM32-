@@ -92,6 +92,29 @@ void HAL_GPIO_EXTI_Callback (uint16_t GPIO_Pin){
   * @brief  The application entry point.
   * @retval int
   */
+void leg_sweep(  TIM_HandleTypeDef htim_ , uint32_t channel_ ){
+
+	int i = 85 ;
+	int max  = 125 ;
+	int min  = 25 ;
+		htim_.Instance->CCR1 = i ;
+	/*
+	while ( i < max ){
+		HAL_Delay(10);
+		htim_.Instance->CCR1 = i ;
+		i++;
+	}
+	while ( i > min){
+		HAL_Delay(10);
+		htim_.Instance->CCR1 = i ;
+		i--;
+	}
+	*/
+
+}
+
+
+
 int main(void)
 {
   /* USER CODE BEGIN 1 */
@@ -136,51 +159,65 @@ int main(void)
 
   uint8_t msg1[] = " hello from stm32 \r\n";
   uint8_t msg2[] = " hey jyothu\r\n";
+  uint8_t mode[8] = "NULL";
+  
 
   while (1)
   {
+
+
 	 switch ( state ){
 
 		case 0:{
 					HAL_GPIO_WritePin ( status_led_GPIO_Port, status_led_Pin , GPIO_PIN_SET );
 					htim2.Instance->CCR1 = 50 ;
-					htim3.Instance->CCR4 = 50 ;
+					htim3.Instance->CCR4 = 90 ;
+					strcpy(mode,"MODE0");
 					break;
 
 				 }
 		case 1:{
 					HAL_GPIO_WritePin ( status_led_GPIO_Port, status_led_Pin , GPIO_PIN_RESET );
 					htim2.Instance->CCR1 = 100 ;
-					htim3.Instance->CCR4 = 100 ;
+					htim3.Instance->CCR4 = 110 ;
+					strcpy(mode,"MODE1");
 					break;
 
 				 }
 		case 2:{
 					htim2.Instance->CCR1 = 200 ;
-					htim3.Instance->CCR4 = 200 ;
+					htim3.Instance->CCR4 = 170 ;
 					HAL_GPIO_TogglePin( status_led_GPIO_Port, status_led_Pin  );
-					HAL_UART_Transmit( &huart1 , msg1 , sizeof(msg1), 10 );
 					HAL_Delay(400);
+					strcpy(mode,"MODE2");
 					break;
 				 }
 		case 3:{
+					strcpy(mode,"MODE3");
+					leg_sweep( htim2, TIM_CHANNEL_1 );
+					/* run (); */
+					/*
 					htim2.Instance->CCR1 = 700 ;
-					htim3.Instance->CCR4 = 700 ;
+					htim3.Instance->CCR4 = 210 ;
 					HAL_GPIO_TogglePin( status_led_GPIO_Port, status_led_Pin  );
-					HAL_UART_Transmit( &huart1 , msg2 , sizeof(msg2), 10 );
+					HAL_UART_Transmit( &huart1 , msg2 , strlen(msg2), 10 );
 					HAL_Delay(1000);
+					*/
 					break;
 				 }
 	 }
 
-	 uint8_t uart_tx_buf[200];
-	 uint8_t end[] =   ".\r\n" ;
+					 uint8_t rx_buf[10];
+					HAL_UART_Receive( &huart1 , rx_buf , sizeof(rx_buf), 600 );
+					int val = atoi(rx_buf);
 
-	 sprintf(uart_tx_buf,"%d", state );
+					HAL_UART_Transmit( &huart1 , "rx:", 4 , 10 );
+					HAL_UART_Transmit( &huart1 , rx_buf , strlen( rx_buf ), 10 );
+					HAL_UART_Transmit( &huart1 , "\r\n", 2 , 10 );
+					HAL_UART_Transmit( &huart1 , mode, strlen(mode), 10 );
+					HAL_UART_Transmit( &huart1 , "\r\n", 2 , 10 );
 
-	 HAL_UART_Transmit( &huart1 , uart_tx_buf , sizeof(uart_tx_buf) , 10);
-	 HAL_UART_Transmit( &huart1 ,end , sizeof(end) , 10);
-	 HAL_Delay(1000);
+	 HAL_Delay(500);
 
 /*
 	 uint8_t uart_rx_buf[200] ;
@@ -393,9 +430,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 840;
+  htim2.Init.Prescaler = 210;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 10000;
+  htim2.Init.Period = 4000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
@@ -671,7 +708,18 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+uint8_t uart_tx_buf[20] ;
+uint8_t end[] = "\r\n";
+
 void run(){
+
+// uart interrupt config
+  HAL_StatusTypeDef st = HAL_UART_Receive_IT( &huart1 , uart_tx_buf , 20 );
+  if (  st  == HAL_OK ){
+	 uint8_t msg[] = "Receive mode ok \r\n";
+	 HAL_UART_Transmit_IT( &huart1 , msg , sizeof( msg  ));
+  }
 
   /*
 	  htim2.Instance->CCR1 = 222;
@@ -686,11 +734,14 @@ void run(){
 	  htim4.Instance->CCR4 = 100;
 	  HAL_Delay(1500);
 	  */
-  HAL_GPIO_TogglePin(status_led_GPIO_Port, status_led_Pin );
-  HAL_Delay(800);
-
-
+	 /* sprintf(uart_tx_buf,"%d", state ); */
 }
+
+void HAL_UART_RxCpltCallback( UART_HandleTypeDef *huart ){
+  HAL_UART_Transmit( &huart1 , uart_tx_buf , strlen(uart_tx_buf) ,10 );
+  HAL_UART_Transmit( &huart1 ,end , sizeof(end) , 10);
+}
+
 /* USER CODE END 4 */
 
 /**
